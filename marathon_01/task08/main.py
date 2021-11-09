@@ -30,7 +30,6 @@ def set_random_mines(grid: mines_grid_typing, mines: int):
     Sets the given number of mines on the grid. ACTHUNG!!11 this function changes the list passed in arguments.
     If mines more than the cells in the grid, then the value is set to the number of cells -1
 
-    :param symbol: mine symbol, by default = MINE const
     :param grid: List [List [str]] - minefield
     :param mines: int - the number of mines to set
     """

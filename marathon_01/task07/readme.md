@@ -4,12 +4,12 @@
 
 У нас есть список названий животных:
 
-`animals = ["dog", "cat", "bat", "cock", "cow", "pig",
-           "fox", "ant", "bird", "lion", "wolf", "deer", "bear", "frog", "hen", "mole", "duck", "goat"]
-`
+```
+animals = ["dog", "cat", "bat", "cock", "cow", "pig", "fox", "ant", "bird", "lion", "wolf", "deer", "bear", "frog", "hen", "mole", "duck", "goat"]
+```
 
 Напишите функцию, которая будет принимать строку txt и возвращать максимальное количество названий животных, которые возможно собрать из символов строки.
-
+```
 txt = "goatcode"
 count_animals(txt) ➞ 2
 
@@ -30,7 +30,7 @@ count_animals("cockdogwdufrbir") ➞ 4
 "cow", "duck", "frog", "bird"
 
 count_animals("dogdogdogdogdog") ➞ 5
-
+```
 
 **моё решение быстрое но не точное) чем длинее и разнообразнее строка, тем менее точное решение выдаёт**
 проверять на строке 'cockdogwdufrbiraier' * 4 с повторениями. каждые четыре появляется возможность собрать на 1 слово больше
