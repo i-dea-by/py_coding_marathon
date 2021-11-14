@@ -51,7 +51,7 @@ def can_exit(maze: list[list[int]]) -> bool:
                       (y, x) not in vizited]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
         return result
 
-    def find_next_cells(y: int, x: int) -> list[tuple]:
+    def find_next_steps(y: int, x: int) -> list[tuple]:
         """
         Функция возвращает список кортежей с координатами ячеек в которые можно шагать
 
@@ -82,7 +82,7 @@ def can_exit(maze: list[list[int]]) -> bool:
         current_cell = queue.popleft()
         vizited.add(current_cell)
 
-        next_cells = find_next_cells(current_cell[0], current_cell[1])
+        next_cells = find_next_steps(current_cell[0], current_cell[1])
 
         for next_cell in next_cells:
             queue.append(next_cell)
