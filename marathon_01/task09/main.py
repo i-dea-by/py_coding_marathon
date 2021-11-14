@@ -103,8 +103,7 @@ def re_translator(string: str) -> str:
             binary_lst.append('1') if char.isupper() else binary_lst.append('0')
         binary = ''.join(binary_lst)
 
-        if binary and int(binary,
-                          2) < 0x110000:  # проверяем чтоб не было пустого списка или выхода за пределы для chr()
+        if binary and int(binary, 2) < 0x110000:  # проверяем чтоб не было пустого списка или выхода за пределы для chr()
             result.append(chr(int(binary, 2)))
         else:
             result.append('ERR')
