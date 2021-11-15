@@ -62,10 +62,10 @@ def can_exit(maze: list[list[int]]) -> bool:
         """
         result = []
         steps = [-1, 0], [0, -1], [1, 0], [0, 1]
-        for dy, dx in steps:
-            if is_cell_good(y + dy, x + dx):
-                shadow_maze[y + dy][x + dx] = shadow_maze[y][x] + 1
-                result.append((y + dy, x + dx))
+        for step_y, step_x in steps:
+            if is_cell_good(y + step_y, x + step_x):
+                shadow_maze[y + step_y][x + step_x] = shadow_maze[y][x] + 1
+                result.append((y + step_y, x + step_x))
         return result
 
     # проверяем и сохраняем размеры матрицы
