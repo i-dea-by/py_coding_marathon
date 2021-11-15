@@ -1,5 +1,5 @@
 from collections import deque
-from random import random, randint
+from random import random
 
 import pygame as pg
 
@@ -50,11 +50,10 @@ def can_exit(maze: list[list[int]]) -> bool:
         :param x: int - координата
         :return: bool - True - можно, False - нельзя
         """
-        result = all([0 <= y < maze_height,
-                      0 <= x < maze_width,
-                      (y, x) not in vizited,
-                     (y, x) not in queue]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
-        return result
+        return all([0 <= y < maze_height,
+                    0 <= x < maze_width,
+                    (y, x) not in vizited,
+                    (y, x) not in queue]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
 
     def find_next_steps(y: int, x: int) -> list[tuple]:
         """
@@ -72,66 +71,79 @@ def can_exit(maze: list[list[int]]) -> bool:
                 result.append((y + step_y, x + step_x))
         return result
 
-    def get_rect(x, y):
-        return x * TILE + 1, y * TILE + 1, TILE - 2, TILE - 2
+    def get_rect(y: int, x: int, inc=1) -> tuple[int, int, int, int]:
+        """
+        Функция возвращает кортеж координат и размеров для метода draw.Rect pygame-а
+
+        :param inc: int - коэффициент для изменения размеров области
+        :param y: int - координата в поле для отрисовки
+        :param x: int - координата в поле для отрисовки
+        :return: tuple[int, int, int, int] - координаты и размеры прямоугольной области (left, top, width, height)
+        """
+        return y * TILE + inc, x * TILE + inc, TILE - (inc * 2), TILE - (inc * 2)
 
     # проверяем и сохраняем размеры матрицы
     maze_height, maze_width = check_dimensions(maze)
 
-    # "теневой лабиринт" для сохранения результатов поиска выхода
+    # "теневой лабиринт" с нулями для сохранения результатов поиска выхода
     shadow_maze = create_random_maze(maze_height, maze_width, chance=0)
 
-    start = (0, 0)  # стартовая ячейка
+    start = current_cell = (0, 0)  # стартовая ячейка
     queue = deque([start])  # очередь для ячеек для следующего шага ()
-    vizited = set()  # хранилище посещенных ячеек
+    vizited = {start: None}  # хранилище посещенных ячеек
 
-    TILE = 60
+    TILE = 30  # размер квадрата сетки лабиринта
 
     pg.init()
-    sc = pg.display.set_mode([maze_width * TILE, maze_height * TILE])
+    sc = pg.display.set_mode([maze_height * TILE, maze_width * TILE])
     clock = pg.time.Clock()
 
     show_maze = True
+
     while show_maze:
-        # fill screen
+        # заливаем экран
         sc.fill(pg.Color('black'))
-        # draw grid
-        [[pg.draw.rect(sc, pg.Color('darkorange'), get_rect(x, y), border_radius=TILE // 5)
+        # рисуем лабиринт
+        [[pg.draw.rect(sc, pg.Color('#DAA520'), get_rect(y, x))
           for x, col in enumerate(row) if col] for y, row in enumerate(maze)]
-        # draw BFS work
-        [pg.draw.rect(sc, pg.Color('forestgreen'), get_rect(x, y)) for y, x in vizited]
-        [pg.draw.rect(sc, pg.Color('darkslategray'), get_rect(x, y)) for y, x in queue]
+        # рисуем результат работы алгоритма поиска
+        [pg.draw.rect(sc, pg.Color('#696969'), get_rect(y, x)) for y, x in vizited]
+        [pg.draw.rect(sc, pg.Color('#FF3030'), get_rect(y, x)) for y, x in queue]
+        # рисуем путь от текущей клетки до начала
+        path_dot = current_cell
+        while path_dot:
+            pg.draw.rect(sc, pg.Color('#FFFFFF'), get_rect(*path_dot, inc=10), TILE, border_radius=TILE // 3)
+            path_dot = vizited[path_dot]
 
         pg.display.update()
         clock.tick(10)
 
+        if queue and current_cell == (maze_height - 1, maze_width - 1):
+            queue.clear()
+            print('FINISH!!!!')
+        elif not queue and current_cell < (maze_height - 1, maze_width - 1):
+            print('Выхода нет)')
+
         if queue:
-            print(f'Queue: {queue}')
-
             current_cell = queue.popleft()
-            vizited.add(current_cell)
-
-            next_cells = find_next_steps(current_cell[0], current_cell[1])
-            print(f'Next cells: {next_cells}')
-
+            next_cells = find_next_steps(*current_cell)
             for next_cell in next_cells:
+                if next_cell == (maze_height - 1, maze_width - 1):
+                    queue.clear()
                 queue.append(next_cell)
+                vizited[next_cell] = current_cell
 
-        # pygame necessary lines
+        # pygame проверка на выход
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
                 show_maze = False
 
-    return shadow_maze[-1][-1] > 0
+    result = shadow_maze[-1][-1] > 0
+    return result
 
 
 if __name__ == '__main__':
-    # print('Рандомный лабиринт:')
-    height, length = randint(3, 10), randint(3, 10)
-    height, length = 10, 10
-    random_maze = create_random_maze(height, length, 0.2)
-
-    height, length = check_dimensions(random_maze)
-    print(f'Размер лабиринта (высота х длина): {height}x{length}')
+    height, width = 15, 15
+    random_maze = create_random_maze(height, width)
     print(f'Выход есть?: {can_exit(random_maze)}')
