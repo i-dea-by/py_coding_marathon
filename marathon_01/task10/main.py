@@ -48,7 +48,8 @@ def can_exit(maze: list[list[int]]) -> bool:
         """
         result = all([0 <= y < maze_height,
                       0 <= x < maze_width,
-                      (y, x) not in vizited]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
+                      (y, x) not in vizited,
+                     (y, x) not in queue]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
         return result
 
     def find_next_steps(y: int, x: int) -> list[tuple]:

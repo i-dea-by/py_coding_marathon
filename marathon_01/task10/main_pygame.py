@@ -1,7 +1,7 @@
 from collections import deque
 from random import random, randint
 
-from tabulate import tabulate
+import pygame as pg
 
 
 def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[list[int]]:
@@ -13,7 +13,11 @@ def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[li
     :param height: int - высота лабиринта
     :return: List[List[int]]
     """
-    return [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
+    result = [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
+
+    # на случай, если рандом завалит выход, принуительно освободим его
+    result[-1][-1] = 0
+    return result
 
 
 def check_dimensions(maze: list[list[int]]) -> tuple[int, int]:
@@ -48,7 +52,8 @@ def can_exit(maze: list[list[int]]) -> bool:
         """
         result = all([0 <= y < maze_height,
                       0 <= x < maze_width,
-                      (y, x) not in vizited]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
+                      (y, x) not in vizited,
+                     (y, x) not in queue]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
         return result
 
     def find_next_steps(y: int, x: int) -> list[tuple]:
@@ -67,62 +72,66 @@ def can_exit(maze: list[list[int]]) -> bool:
                 result.append((y + dy, x + dx))
         return result
 
+    def get_rect(x, y):
+        return x * TILE + 1, y * TILE + 1, TILE - 2, TILE - 2
+
     # проверяем и сохраняем размеры матрицы
     maze_height, maze_width = check_dimensions(maze)
 
     # "теневой лабиринт" для сохранения результатов поиска выхода
     shadow_maze = create_random_maze(maze_height, maze_width, chance=0)
 
-    start = (0, 0)          # стартовая ячейка
+    start = (0, 0)  # стартовая ячейка
     queue = deque([start])  # очередь для ячеек для следующего шага ()
-    vizited = set()         # хранилище посещенных ячеек
+    vizited = set()  # хранилище посещенных ячеек
 
-    # поиск в ширшоту
-    while queue:
-        current_cell = queue.popleft()
-        vizited.add(current_cell)
+    TILE = 60
 
-        next_cells = find_next_steps(current_cell[0], current_cell[1])
+    pg.init()
+    sc = pg.display.set_mode([maze_width * TILE, maze_height * TILE])
+    clock = pg.time.Clock()
 
-        for next_cell in next_cells:
-            queue.append(next_cell)
+    show_maze = True
+    while show_maze:
+        # fill screen
+        sc.fill(pg.Color('black'))
+        # draw grid
+        [[pg.draw.rect(sc, pg.Color('darkorange'), get_rect(x, y), border_radius=TILE // 5)
+          for x, col in enumerate(row) if col] for y, row in enumerate(maze)]
+        # draw BFS work
+        [pg.draw.rect(sc, pg.Color('forestgreen'), get_rect(x, y)) for y, x in vizited]
+        [pg.draw.rect(sc, pg.Color('darkslategray'), get_rect(x, y)) for y, x in queue]
+
+        pg.display.update()
+        clock.tick(10)
+
+        if queue:
+            print(f'Queue: {queue}')
+
+            current_cell = queue.popleft()
+            vizited.add(current_cell)
+
+            next_cells = find_next_steps(current_cell[0], current_cell[1])
+            print(f'Next cells: {next_cells}')
+
+            for next_cell in next_cells:
+                queue.append(next_cell)
+
+        # pygame necessary lines
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                show_maze = False
 
     return shadow_maze[-1][-1] > 0
 
 
 if __name__ == '__main__':
-    maze_init = [[0, 1, 1, 1, 1, 1, 1],
-                 [0, 0, 1, 1, 0, 1, 1],
-                 [1, 0, 0, 0, 0, 1, 1],
-                 [1, 1, 1, 1, 0, 0, 1],
-                 [1, 1, 1, 1, 1, 0, 0]]
+    # print('Рандомный лабиринт:')
+    height, length = randint(3, 10), randint(3, 10)
+    height, length = 10, 10
+    random_maze = create_random_maze(height, length, 0.2)
 
-    # тесты на примерах из задачи
-    assert can_exit(maze_init)
-    assert not can_exit([[0], [0], [1]])
-    assert not can_exit([[0, 1, 1, 1, 1, 1, 1],
-                         [0, 0, 1, 0, 0, 1, 1],
-                         [1, 0, 0, 0, 0, 1, 1],
-                         [1, 1, 0, 1, 0, 0, 1],
-                         [1, 1, 0, 0, 1, 1, 1]])
-    assert not can_exit([[0, 1, 1, 1, 1, 0, 0],
-                         [0, 0, 0, 0, 1, 0, 0],
-                         [1, 1, 1, 0, 0, 0, 0],
-                         [1, 1, 1, 1, 1, 1, 0],
-                         [1, 1, 1, 1, 1, 1, 1]])
-
-    # работаем
-    print('Готовый лабиринт:')
-    print(tabulate(maze_init, tablefmt="grid"))
-    height, length = check_dimensions(maze_init)
-    print(f'Размер лабиринта (высота х длина): {height}x{length}')
-    print(f'Выход есть?: {can_exit(maze_init)}')
-    print('-' * 60)
-
-    print('Рандомный лабиринт:')
-    length = randint(4, 9)  # для красоты пусть будет квадратный
-    random_maze = create_random_maze(length, length)
-    print(tabulate(random_maze, tablefmt="grid"))
     height, length = check_dimensions(random_maze)
     print(f'Размер лабиринта (высота х длина): {height}x{length}')
     print(f'Выход есть?: {can_exit(random_maze)}')
