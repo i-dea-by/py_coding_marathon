@@ -15,7 +15,7 @@ def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[li
     """
     result = [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
 
-    # на случай, если рандом завалит выход, принуительно освободим его
+    # на случай, если рандом завалит выход, принудительно освободим его
     result[-1][-1] = 0
     return result
 
@@ -98,7 +98,7 @@ def can_exit(maze: list[list[int]]) -> bool:
     sc = pg.display.set_mode([maze_height * TILE, maze_width * TILE])
     clock = pg.time.Clock()
 
-    show_maze = True
+    show_maze = True  # условие выхода из цикла
 
     while show_maze:
         # заливаем экран
