@@ -13,7 +13,11 @@ def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[li
     :param height: int - высота лабиринта
     :return: List[List[int]]
     """
-    return [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
+    result = [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
+
+    # на случай, если рандом завалит выход, принуительно освободим его
+    result[-1][-1] = 0
+    return result
 
 
 def check_dimensions(maze: list[list[int]]) -> tuple[int, int]:
@@ -117,7 +121,7 @@ if __name__ == '__main__':
     print(tabulate(maze_init, tablefmt="grid"))
     height, length = check_dimensions(maze_init)
     print(f'Размер лабиринта (высота х длина): {height}x{length}')
-    print(f'Выход есть?: {can_exit(maze_init)}')
+    print(f'Выход есть?: {"Да" if can_exit(maze_init) else "Нет"}')
     print('-' * 60)
 
     print('Рандомный лабиринт:')
@@ -126,4 +130,4 @@ if __name__ == '__main__':
     print(tabulate(random_maze, tablefmt="grid"))
     height, length = check_dimensions(random_maze)
     print(f'Размер лабиринта (высота х длина): {height}x{length}')
-    print(f'Выход есть?: {can_exit(random_maze)}')
+    print(f'Выход есть?: {"Да" if can_exit(random_maze) else "Нет"}')
