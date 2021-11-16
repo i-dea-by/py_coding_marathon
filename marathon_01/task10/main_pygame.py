@@ -4,7 +4,7 @@ from random import random
 import pygame as pg
 
 # размер квадрата сетки лабиринта
-TILE = 30
+TILE = 50
 
 # константы цветов
 BRICK = '#9E0000'
@@ -86,7 +86,7 @@ def can_exit(maze: list[list[int]]) -> bool:
         :param x: int - координата в поле для отрисовки
         :return: tuple[int, int, int, int] - координаты и размеры прямоугольной области (left, top, width, height)
         """
-        return y * TILE + inc, x * TILE + inc, TILE - (inc * 2), TILE - (inc * 2)
+        return x * TILE + inc, y * TILE + inc, TILE - (inc * 2), TILE - (inc * 2)
 
     # проверяем и сохраняем размеры матрицы
     maze_height, maze_width = check_dimensions(maze)
@@ -108,7 +108,7 @@ def can_exit(maze: list[list[int]]) -> bool:
         # рисуем путь от текущей клетки до начала
         path_dot = current_cell
         while path_dot:
-            pg.draw.rect(sc, pg.Color('#FFFFFF'), get_rect(*path_dot, inc=10), TILE, border_radius=TILE // 3)
+            pg.draw.rect(sc, pg.Color('#FFFFFF'), get_rect(*path_dot, inc=17), TILE, border_radius=TILE // 3)
             path_dot = vizited[path_dot]
 
         pg.display.update()
@@ -140,11 +140,11 @@ def can_exit(maze: list[list[int]]) -> bool:
 
 if __name__ == '__main__':
     height, width = 15, 15
-    random_maze = create_random_maze(height, width, chance=0.15)
+    random_maze = create_random_maze(height, width, chance=0.2)
 
     # инициализируем pygame
     pg.init()
-    sc = pg.display.set_mode([height * TILE, width * TILE])
+    sc = pg.display.set_mode([width * TILE, height * TILE])
     pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
     brick_surface = pg.image.load('img/brick.bmp')
     pg.display.set_icon(brick_surface)
