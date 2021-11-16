@@ -3,9 +3,10 @@ from random import random
 
 import pygame as pg
 
+# кадров в секунду
+FPS = 15
 # размер квадрата сетки лабиринта
 TILE = 50
-
 # константы цветов
 BRICK = '#9E0000'
 FOREST = '#317b00'
@@ -22,7 +23,8 @@ def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[li
     :return: List[List[int]]
     """
     result = [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
-    result[-1][-1] = 0  # на случай, если рандом завалит выход, принудительно освободим его
+    result[0][0] = 0  # на случай, если рандом завалит вход/выход, принудительно освободим его
+    result[-1][-1] = 0
     return result
 
 
@@ -88,6 +90,37 @@ def can_exit(maze: list[list[int]]) -> bool:
         """
         return x * TILE + inc, y * TILE + inc, TILE - (inc * 2), TILE - (inc * 2)
 
+    def draw_maze():
+        """ Функция отрисовки элементов лабиринта - препятствий, обработанных ячеек и ячеек следующего шага """
+
+        # рисуем лабиринт
+        [[sc.blit(brick_surface, get_rect(y, x)) for x, brick in enumerate(row) if brick] for y, row in enumerate(maze)]
+        # рисуем результат работы алгоритма поиска
+        [pg.draw.rect(sc, pg.Color(FOREST), get_rect(y, x)) for y, x in vizited]
+        [pg.draw.rect(sc, pg.Color(BURN), get_rect(y, x)) for y, x in queue]
+        # рисуем путь от текущей клетки до начала
+        path_dot = current_cell
+        while path_dot:
+            pg.draw.rect(sc, pg.Color('#FFFFFF'), get_rect(*path_dot, inc=17), TILE, border_radius=TILE // 3)
+            path_dot = vizited[path_dot]
+
+    def draw_finish_text():
+        """Функция отрисовки заставки текста в конце работы алгоритма"""
+
+        dialog_sc = pg.Surface((TILE * 8, TILE * 8))
+        dialog_sc.fill(pg.Color(BRICK))
+        dialog_sc.set_alpha(180)
+
+        result_text = 'Выход есть' if is_finished == 1 else 'Выхода нет ('
+        text_sc = text.render(result_text, True, (255, 255, 255))
+
+        click_text = 'Нажмите мышкой для рестарта'
+        click__sc = small_text.render(click_text, True, (255, 255, 255))
+
+        sc.blit(dialog_sc, (TILE * 3, TILE * 3))
+        sc.blit(text_sc, text_sc.get_rect(center=((TILE * maze_width) // 2, (TILE * maze_height) // 2)))
+        sc.blit(click__sc, text_sc.get_rect(center=((TILE * maze_width) // 2, (TILE * maze_height) // 2 + 50)))
+
     # проверяем и сохраняем размеры матрицы
     maze_height, maze_width = check_dimensions(maze)
 
@@ -98,28 +131,28 @@ def can_exit(maze: list[list[int]]) -> bool:
     queue = deque([start])  # очередь для ячеек для следующего шага ()
     vizited = {start: None}  # хранилище посещенных ячеек
 
+    # флаг окончания работы алгоритма: 0 - работает, 1 - выход есть, 2 - выхода нету
+    is_finished = 0
+
     show_maze = True  # условие выхода из цикла
     while show_maze:
-        # рисуем лабиринт
-        [[sc.blit(brick_surface, get_rect(y, x)) for x, one in enumerate(row) if one] for y, row in enumerate(maze)]
-        # рисуем результат работы алгоритма поиска
-        [pg.draw.rect(sc, pg.Color(FOREST), get_rect(y, x)) for y, x in vizited]
-        [pg.draw.rect(sc, pg.Color(BURN), get_rect(y, x)) for y, x in queue]
-        # рисуем путь от текущей клетки до начала
-        path_dot = current_cell
-        while path_dot:
-            pg.draw.rect(sc, pg.Color('#FFFFFF'), get_rect(*path_dot, inc=17), TILE, border_radius=TILE // 3)
-            path_dot = vizited[path_dot]
+
+        draw_maze()  # рисуем лабиринт
+
+        if is_finished > 0:  # если наступил конец работы алгоритма)
+            draw_finish_text()
 
         pg.display.update()
-        clock.tick(10)
+        clock.tick(FPS)
 
-        if queue and current_cell == (maze_height - 1, maze_width - 1):
+        # блок проверки закончил ли работу алгоритм
+        if queue and current_cell == (maze_height - 1, maze_width - 1):  # если добрались до выхода
             queue.clear()
-            print('FINISH!!!!')
-        elif not queue and current_cell < (maze_height - 1, maze_width - 1):
-            print('Выхода нет)')
+            is_finished = 1
+        if not queue and current_cell < (maze_height - 1, maze_width - 1):  # если до выхода не добраться
+            is_finished = 2
 
+        # алгоритм поиска в ширину
         if queue:
             current_cell = queue.popleft()
             next_cells = find_next_steps(*current_cell)
@@ -127,32 +160,44 @@ def can_exit(maze: list[list[int]]) -> bool:
                 # если добрались до выхода
                 if next_cell == (maze_height - 1, maze_width - 1):
                     queue.clear()
+                    is_finished = 1
                 queue.append(next_cell)
                 vizited[next_cell] = current_cell
 
         # pygame проверка на выход
         for event in pg.event.get():
+            if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
+                show_maze = False
             if event.type == pg.QUIT:
                 show_maze = False
+                maze[0][0] = -1  # костыль для нормального завершения работы программы
 
     return shadow_maze[-1][-1] > 0
 
 
 if __name__ == '__main__':
-    height, width = 15, 15
-    random_maze = create_random_maze(height, width, chance=0.2)
+    # размеры лабиринта
+    height, width = 14, 14
+    # признак повторения цикла
+    running = True
 
     # инициализируем pygame
     pg.init()
-    sc = pg.display.set_mode([width * TILE, height * TILE])
+    sc = pg.display.set_mode((width * TILE, height * TILE))
     pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
-    brick_surface = pg.image.load('img/brick.bmp')
+    brick_surface = pg.image.load('resources/brick.bmp')
     pg.display.set_icon(brick_surface)
     clock = pg.time.Clock()
-    sc.fill(pg.Color('black'))
+    text = pg.font.Font(None, 48)
+    small_text = pg.font.Font(None, 20)
 
-    is_exit = can_exit(random_maze)
+    while running:
+        sc.fill(pg.Color('black'))
+        random_maze = create_random_maze(height, width, chance=0.2)
+
+        is_exit = can_exit(random_maze)
+
+        if random_maze[0][0] == -1:  # костыль для нормального завершения работы программы
+            running = False
 
     pg.quit()
-
-    print(f'Выход есть?: {"Да" if is_exit else "Нет"}')
