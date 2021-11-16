@@ -3,10 +3,14 @@ from random import random
 
 import pygame as pg
 
-TILE = 30  # размер квадрата сетки лабиринта
+# размер квадрата сетки лабиринта
+TILE = 30
+
+# константы цветов
 BRICK = '#9E0000'
 FOREST = '#317b00'
 BURN = '#FF3030'
+
 
 def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[list[int]]:
     """
@@ -18,9 +22,7 @@ def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[li
     :return: List[List[int]]
     """
     result = [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
-
-    # на случай, если рандом завалит выход, принудительно освободим его
-    result[-1][-1] = 0
+    result[-1][-1] = 0  # на случай, если рандом завалит выход, принудительно освободим его
     return result
 
 
@@ -79,7 +81,7 @@ def can_exit(maze: list[list[int]]) -> bool:
         """
         Функция возвращает кортеж координат и размеров для метода draw.Rect pygame-а
 
-        :param inc: int - коэффициент для изменения размеров области
+        :param inc: int - отступы от краёв сетки лабиринта
         :param y: int - координата в поле для отрисовки
         :param x: int - координата в поле для отрисовки
         :return: tuple[int, int, int, int] - координаты и размеры прямоугольной области (left, top, width, height)
@@ -122,6 +124,7 @@ def can_exit(maze: list[list[int]]) -> bool:
             current_cell = queue.popleft()
             next_cells = find_next_steps(*current_cell)
             for next_cell in next_cells:
+                # если добрались до выхода
                 if next_cell == (maze_height - 1, maze_width - 1):
                     queue.clear()
                 queue.append(next_cell)
@@ -138,7 +141,7 @@ def can_exit(maze: list[list[int]]) -> bool:
 
 if __name__ == '__main__':
     height, width = 15, 15
-    random_maze = create_random_maze(height, width)
+    random_maze = create_random_maze(height, width, chance=0.15)
 
     # инициализируем pygame
     pg.init()
@@ -149,4 +152,6 @@ if __name__ == '__main__':
     clock = pg.time.Clock()
     sc.fill(pg.Color('black'))
 
-    print(f'Выход есть?: {"Да" if can_exit(random_maze) else "Нет"}')
+    is_exit = can_exit(random_maze)
+
+    print(f'Выход есть?: {"Да" if is_exit else "Нет"}')
