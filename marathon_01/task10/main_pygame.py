@@ -133,7 +133,6 @@ def can_exit(maze: list[list[int]]) -> bool:
         # pygame проверка на выход
         for event in pg.event.get():
             if event.type == pg.QUIT:
-                pg.quit()
                 show_maze = False
 
     return shadow_maze[-1][-1] > 0
@@ -153,5 +152,7 @@ if __name__ == '__main__':
     sc.fill(pg.Color('black'))
 
     is_exit = can_exit(random_maze)
+
+    pg.quit()
 
     print(f'Выход есть?: {"Да" if is_exit else "Нет"}')
