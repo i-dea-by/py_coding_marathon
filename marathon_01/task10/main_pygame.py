@@ -3,6 +3,10 @@ from random import random
 
 import pygame as pg
 
+TILE = 30  # размер квадрата сетки лабиринта
+BRICK = '#9E0000'
+FOREST = '#317b00'
+BURN = '#FF3030'
 
 def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[list[int]]:
     """
@@ -92,23 +96,13 @@ def can_exit(maze: list[list[int]]) -> bool:
     queue = deque([start])  # очередь для ячеек для следующего шага ()
     vizited = {start: None}  # хранилище посещенных ячеек
 
-    TILE = 30  # размер квадрата сетки лабиринта
-
-    pg.init()
-    sc = pg.display.set_mode([maze_height * TILE, maze_width * TILE])
-    clock = pg.time.Clock()
-
     show_maze = True  # условие выхода из цикла
-
     while show_maze:
-        # заливаем экран
-        sc.fill(pg.Color('black'))
         # рисуем лабиринт
-        [[pg.draw.rect(sc, pg.Color('#DAA520'), get_rect(y, x))
-          for x, col in enumerate(row) if col] for y, row in enumerate(maze)]
+        [[sc.blit(brick_surface, get_rect(y, x)) for x, one in enumerate(row) if one] for y, row in enumerate(maze)]
         # рисуем результат работы алгоритма поиска
-        [pg.draw.rect(sc, pg.Color('#696969'), get_rect(y, x)) for y, x in vizited]
-        [pg.draw.rect(sc, pg.Color('#FF3030'), get_rect(y, x)) for y, x in queue]
+        [pg.draw.rect(sc, pg.Color(FOREST), get_rect(y, x)) for y, x in vizited]
+        [pg.draw.rect(sc, pg.Color(BURN), get_rect(y, x)) for y, x in queue]
         # рисуем путь от текущей клетки до начала
         path_dot = current_cell
         while path_dot:
@@ -139,11 +133,20 @@ def can_exit(maze: list[list[int]]) -> bool:
                 pg.quit()
                 show_maze = False
 
-    result = shadow_maze[-1][-1] > 0
-    return result
+    return shadow_maze[-1][-1] > 0
 
 
 if __name__ == '__main__':
     height, width = 15, 15
     random_maze = create_random_maze(height, width)
-    print(f'Выход есть?: {can_exit(random_maze)}')
+
+    # инициализируем pygame
+    pg.init()
+    sc = pg.display.set_mode([height * TILE, width * TILE])
+    pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
+    brick_surface = pg.image.load('img/brick.bmp')
+    pg.display.set_icon(brick_surface)
+    clock = pg.time.Clock()
+    sc.fill(pg.Color('black'))
+
+    print(f'Выход есть?: {"Да" if can_exit(random_maze) else "Нет"}')
