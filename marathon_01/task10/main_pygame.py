@@ -46,10 +46,6 @@ def can_exit(maze: list[list[int]]) -> int:
     if not isinstance(maze, list):
         raise TypeError('can_exit() - аргумент maze должен быть типа list!')
 
-    # проверяем что во входном списке хоть что-то есть
-    if not maze or not maze[0]:
-        return False
-
     # внутренние функции
     def is_cell_good(y: int, x: int) -> bool:
         """
