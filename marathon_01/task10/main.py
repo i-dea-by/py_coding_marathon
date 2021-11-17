@@ -16,6 +16,7 @@ def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[li
     result = [[1 if random() < chance else 0 for _ in range(width)] for _ in range(height)]
 
     # на случай, если рандом завалит выход, принуительно освободим его
+    result[0][0] = 0  # на случай, если рандом завалит вход/выход, принудительно освободим его
     result[-1][-1] = 0
     return result
 
