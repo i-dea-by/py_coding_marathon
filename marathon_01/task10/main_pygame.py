@@ -6,11 +6,12 @@ import pygame as pg
 # кадров в секунду
 FPS = 15
 # размер квадрата сетки лабиринта
-TILE = 50
+CELL_SIZE = 50
 # константы цветов
 BRICK = '#9E0000'
 FOREST = '#317b00'
 BURN = '#FF3030'
+WHITE = '#FFFFFF'
 
 
 def create_random_maze(height: int, width: int, chance: float = 0.25) -> list[list[int]]:
@@ -63,13 +64,13 @@ def can_exit(maze: list[list[int]]) -> bool:
                     (y, x) not in vizited,
                     (y, x) not in queue]) and maze[y][x] == 0  # пришлось вынести, чтоб проверка срабатывала после
 
-    def find_next_steps(y: int, x: int) -> list[tuple]:
+    def find_next_steps(y: int, x: int) -> list[tuple[int, int]]:
         """
         Функция возвращает список кортежей с координатами ячеек в которые можно шагать
 
         :param y: int - координата текущей ячейки
         :param x: int - координата текущей ячейки
-        :return: list[tuple] - список кортежей с координатами
+        :return: list[tuple[int, int]] - список кортежей с координатами
         """
         result = []
         steps = [-1, 0], [0, -1], [1, 0], [0, 1]
@@ -79,16 +80,16 @@ def can_exit(maze: list[list[int]]) -> bool:
                 result.append((y + step_y, x + step_x))
         return result
 
-    def get_rect(y: int, x: int, inc=1) -> tuple[int, int, int, int]:
+    def get_rect(y: int, x: int, margin=1) -> tuple[int, int, int, int]:
         """
         Функция возвращает кортеж координат и размеров для метода draw.Rect pygame-а
 
-        :param inc: int - отступы от краёв сетки лабиринта
+        :param margin: int - отступы от краёв сетки лабиринта
         :param y: int - координата в поле для отрисовки
         :param x: int - координата в поле для отрисовки
         :return: tuple[int, int, int, int] - координаты и размеры прямоугольной области (left, top, width, height)
         """
-        return x * TILE + inc, y * TILE + inc, TILE - (inc * 2), TILE - (inc * 2)
+        return x * CELL_SIZE + margin, y * CELL_SIZE + margin, CELL_SIZE - (margin * 2), CELL_SIZE - (margin * 2)
 
     def draw_maze():
         """ Функция отрисовки элементов лабиринта - препятствий, обработанных ячеек и ячеек следующего шага """
@@ -101,25 +102,25 @@ def can_exit(maze: list[list[int]]) -> bool:
         # рисуем путь от текущей клетки до начала
         path_dot = current_cell
         while path_dot:
-            pg.draw.rect(sc, pg.Color('#FFFFFF'), get_rect(*path_dot, inc=17), TILE, border_radius=TILE // 3)
+            pg.draw.rect(sc, pg.Color(WHITE), get_rect(*path_dot, margin=17), CELL_SIZE, border_radius=CELL_SIZE // 3)
             path_dot = vizited[path_dot]
 
     def draw_finish_text():
         """Функция отрисовки заставки текста в конце работы алгоритма"""
 
-        dialog_sc = pg.Surface((TILE * 8, TILE * 8))
+        dialog_sc = pg.Surface((CELL_SIZE * 8, CELL_SIZE * 8))
         dialog_sc.fill(pg.Color(BRICK))
-        dialog_sc.set_alpha(180)
+        dialog_sc.set_alpha(200)
 
         result_text = 'Выход есть' if is_finished == 1 else 'Выхода нет ('
-        text_sc = text.render(result_text, True, (255, 255, 255))
+        text_sc = text.render(result_text, True, WHITE)
 
         click_text = 'Нажмите мышкой для рестарта'
-        click__sc = small_text.render(click_text, True, (255, 255, 255))
+        click_sc = small_text.render(click_text, True, WHITE)
 
-        sc.blit(dialog_sc, (TILE * 3, TILE * 3))
-        sc.blit(text_sc, text_sc.get_rect(center=((TILE * maze_width) // 2, (TILE * maze_height) // 2)))
-        sc.blit(click__sc, text_sc.get_rect(center=((TILE * maze_width) // 2, (TILE * maze_height) // 2 + 50)))
+        sc.blit(dialog_sc, (CELL_SIZE * 3, CELL_SIZE * 3))
+        sc.blit(text_sc, text_sc.get_rect(center=((CELL_SIZE * maze_width) // 2, (CELL_SIZE * maze_height) // 2)))
+        sc.blit(click_sc, text_sc.get_rect(center=((CELL_SIZE * maze_width) // 2, (CELL_SIZE * maze_height) // 2 + 50)))
 
     # проверяем и сохраняем размеры матрицы
     maze_height, maze_width = check_dimensions(maze)
@@ -181,9 +182,9 @@ if __name__ == '__main__':
     # признак повторения цикла
     running = True
 
-    # инициализируем pygame
+    # инициализируем pygame (неплохоб бы в отдельную функцию, но лень)
     pg.init()
-    sc = pg.display.set_mode((width * TILE, height * TILE))
+    sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
     pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
     brick_surface = pg.image.load('resources/brick.bmp')
     pg.display.set_icon(brick_surface)
