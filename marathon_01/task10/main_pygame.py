@@ -41,7 +41,7 @@ def check_dimensions(maze: list[list[int]]) -> tuple[int, int]:
     return len(maze), len(min(maze, key=len))
 
 
-def can_exit(maze: list[list[int]]) -> bool:
+def can_exit(maze: list[list[int]]) -> int:
     # проверяем соответствие типов входных параметров
     if not isinstance(maze, list):
         raise TypeError('can_exit() - аргумент maze должен быть типа list!')
@@ -132,7 +132,7 @@ def can_exit(maze: list[list[int]]) -> bool:
     queue = deque([start])  # очередь для ячеек для следующего шага ()
     vizited = {start: None}  # хранилище посещенных ячеек
 
-    # флаг окончания работы алгоритма: 0 - работает, 1 - выход есть, 2 - выхода нету
+    # флаг окончания работы алгоритма: 0 - работает, 1 - выход есть, 2 - выхода нету, 3 - окно закрыли
     is_finished = 0
 
     show_maze = True  # условие выхода из цикла
@@ -170,19 +170,17 @@ def can_exit(maze: list[list[int]]) -> bool:
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 show_maze = False
             if event.type == pg.QUIT:
+                is_finished = 3
                 show_maze = False
-                maze[0][0] = -1  # костыль для нормального завершения работы программы
 
-    return shadow_maze[-1][-1] > 0
+    return is_finished
 
 
 if __name__ == '__main__':
     # размеры лабиринта
     height, width = 14, 14
-    # признак повторения цикла
-    running = True
 
-    # инициализируем pygame (неплохоб бы в отдельную функцию, но лень)
+    # инициализируем pygame (неплохоб бы в отдельную функцию, но лень:)
     pg.init()
     sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
     pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
@@ -192,13 +190,10 @@ if __name__ == '__main__':
     text = pg.font.Font(None, 48)
     small_text = pg.font.Font(None, 20)
 
-    while running:
+    # признак повторения цикла
+    running = 0
+    while running < 3:
         sc.fill(pg.Color('black'))
         random_maze = create_random_maze(height, width, chance=0.2)
-
-        is_exit = can_exit(random_maze)
-
-        if random_maze[0][0] == -1:  # костыль для нормального завершения работы программы
-            running = False
-
+        running = can_exit(random_maze)
     pg.quit()
