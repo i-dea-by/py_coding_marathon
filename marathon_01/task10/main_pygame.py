@@ -1,5 +1,5 @@
 from collections import deque
-from random import random
+from random import random, randint
 
 import pygame as pg
 
@@ -80,7 +80,7 @@ def can_exit(maze: list[list[int]]) -> int:
         """
         Функция возвращает кортеж координат и размеров для метода draw.Rect pygame-а
 
-        :param margin: int - отступы от краёв сетки лабиринта
+        :param margin: int - отступы от краёв сетки лабиринта. по умолчанию = 1, чтоб не рисовать черныу сетку
         :param y: int - координата в поле для отрисовки
         :param x: int - координата в поле для отрисовки
         :return: tuple[int, int, int, int] - координаты и размеры прямоугольной области (left, top, width, height)
@@ -89,20 +89,26 @@ def can_exit(maze: list[list[int]]) -> int:
 
     def draw_maze():
         """ Функция отрисовки элементов лабиринта - препятствий, обработанных ячеек и ячеек следующего шага """
-
-        # рисуем лабиринт
-        [[sc.blit(brick_surface, get_rect(y, x)) for x, brick in enumerate(row) if brick] for y, row in enumerate(maze)]
-        # рисуем результат работы алгоритма поиска
-        [pg.draw.rect(sc, pg.Color(FOREST), get_rect(y, x)) for y, x in vizited]
-        [pg.draw.rect(sc, pg.Color(BURN), get_rect(y, x)) for y, x in queue]
+        # рисуем лабиринт, точнее препятствия
+        for y, row in enumerate(maze):
+            for x, brick in enumerate(row):
+                if brick == 1:
+                    sc.blit(brick_surface, get_rect(y, x))
+        # выводим посещенные клетки
+        for y, x in vizited:
+            pg.draw.rect(sc, pg.Color(FOREST), get_rect(y, x))
+        # выводим «подожженые» клетки из очереди
+        for y, x in queue:
+            pg.draw.rect(sc, pg.Color(BURN), get_rect(y, x))
         # рисуем путь от текущей клетки до начала
-        path_dot = current_cell
-        while path_dot:
-            pg.draw.rect(sc, pg.Color(WHITE), get_rect(*path_dot, margin=17), CELL_SIZE, border_radius=CELL_SIZE // 3)
-            path_dot = vizited[path_dot]
+        path = current_cell
+        while path:
+            pg.draw.rect(sc, pg.Color(WHITE), get_rect(*path, margin=17), CELL_SIZE, border_radius=CELL_SIZE // 3)
+            path = vizited[path]
 
     def draw_finish_text():
         """Функция отрисовки заставки текста в конце работы алгоритма"""
+        center_rect = ((CELL_SIZE * maze_width) // 2, (CELL_SIZE * maze_height) // 2)
 
         dialog_sc = pg.Surface((CELL_SIZE * 8, CELL_SIZE * 8))
         dialog_sc.fill(pg.Color(BRICK))
@@ -114,8 +120,9 @@ def can_exit(maze: list[list[int]]) -> int:
         click_text = 'Нажмите мышкой для рестарта'
         click_sc = small_text.render(click_text, True, WHITE)
 
-        sc.blit(dialog_sc, (CELL_SIZE * 3, CELL_SIZE * 3))
-        sc.blit(text_sc, text_sc.get_rect(center=((CELL_SIZE * maze_width) // 2, (CELL_SIZE * maze_height) // 2)))
+        # отображаем на основную поверхность
+        sc.blit(dialog_sc, dialog_sc.get_rect(center=center_rect))
+        sc.blit(text_sc, text_sc.get_rect(center=center_rect))
         sc.blit(click_sc, text_sc.get_rect(center=((CELL_SIZE * maze_width) // 2, (CELL_SIZE * maze_height) // 2 + 50)))
 
     # проверяем и сохраняем размеры матрицы
@@ -124,9 +131,9 @@ def can_exit(maze: list[list[int]]) -> int:
     # "теневой лабиринт" с нулями для сохранения результатов поиска выхода
     shadow_maze = create_random_maze(maze_height, maze_width, chance=0)
 
-    start = current_cell = (0, 0)  # стартовая ячейка
-    queue = deque([start])  # очередь для ячеек для следующего шага ()
-    vizited = {start: None}  # хранилище посещенных ячеек
+    current_cell = (0, 0)  # стартовая ячейка
+    queue = deque([current_cell])  # очередь для ячеек для следующего шага
+    vizited = {current_cell: None}  # хранилище посещенных ячеек
 
     # флаг окончания работы алгоритма: 0 - работает, 1 - выход есть, 2 - выхода нету, 3 - окно закрыли
     is_finished = 0
@@ -173,12 +180,8 @@ def can_exit(maze: list[list[int]]) -> int:
 
 
 if __name__ == '__main__':
-    # размеры лабиринта
-    height, width = 14, 14
-
     # инициализируем pygame (неплохоб бы в отдельную функцию, но лень:)
     pg.init()
-    sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
     pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
     brick_surface = pg.image.load('resources/brick.bmp')
     pg.display.set_icon(brick_surface)
@@ -189,7 +192,12 @@ if __name__ == '__main__':
     # признак повторения цикла
     running = 0
     while running < 3:
+        # размеры лабиринта
+        height, width = randint(6, 15), randint(6, 15)
+        sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
         sc.fill(pg.Color('black'))
+
         random_maze = create_random_maze(height, width, chance=0.2)
         running = can_exit(random_maze)
+
     pg.quit()
