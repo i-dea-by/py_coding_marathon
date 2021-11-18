@@ -188,10 +188,11 @@ if __name__ == '__main__':
     # признак повторения цикла
     running = 0
     while running < 3:
-        sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
-        sc.fill(pg.Color('black'))
         # размеры лабиринта
         height, width = randint(6, 15), randint(6, 15)
+        # переинициализация pygame-a
+        sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
+        sc.fill(pg.Color('black'))
 
         random_maze = create_random_maze(height, width, chance=0.2)
         running = can_exit(random_maze)
