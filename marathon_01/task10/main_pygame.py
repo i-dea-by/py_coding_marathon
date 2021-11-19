@@ -179,7 +179,7 @@ def can_exit(maze: list[list[int]]) -> int:
 if __name__ == '__main__':
     # инициализируем pygame (неплохоб бы в отдельную функцию, но лень:)
     pg.init()
-    pg.display.set_caption("Прохождение лабиринта :: Поиск в ширину (BFS)")
+    pg.display.set_caption("Поиск выхода из лабиринта :: Поиск в ширину (BFS)")
     brick_surface = pg.image.load('resources/brick.bmp')
     pg.display.set_icon(brick_surface)
     clock = pg.time.Clock()
@@ -195,7 +195,7 @@ if __name__ == '__main__':
         sc = pg.display.set_mode((width * CELL_SIZE, height * CELL_SIZE))
         sc.fill(pg.Color('black'))
 
-        random_maze = create_random_maze(height, width, chance=0.2)
+        random_maze = create_random_maze(height, width)
         running = can_exit(random_maze)
 
     pg.quit()
