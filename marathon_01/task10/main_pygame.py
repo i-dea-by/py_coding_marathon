@@ -9,7 +9,8 @@ FPS = 15
 CELL_SIZE = 50
 # константы цветов
 BRICK = '#9E0000'
-FOREST = '#317b00'
+GREEN = '#317b00'
+DARK_GREEN = '#225400'
 BURN = '#FF3030'
 WHITE = '#FFFFFF'
 
@@ -95,7 +96,7 @@ def can_exit(maze: list[list[int]]) -> int:
                     sc.blit(brick_surface, get_rect(y, x))
         # выводим посещенные клетки
         for y, x in vizited:
-            pg.draw.rect(sc, pg.Color(FOREST), get_rect(y, x))
+            pg.draw.rect(sc, pg.Color(GREEN), get_rect(y, x))
         # выводим «подожженые» клетки из очереди
         for y, x in queue:
             pg.draw.rect(sc, pg.Color(BURN), get_rect(y, x))
@@ -110,7 +111,7 @@ def can_exit(maze: list[list[int]]) -> int:
         center_rect = ((CELL_SIZE * maze_width) // 2, (CELL_SIZE * maze_height) // 2)
 
         dialog_sc = pg.Surface((CELL_SIZE * 8, CELL_SIZE * 8))
-        dialog_sc.fill(pg.Color(BRICK))
+        dialog_sc.fill(pg.Color(DARK_GREEN if is_finished == 1 else BRICK))
         dialog_sc.set_alpha(200)
 
         result_text = 'Выход есть' if is_finished == 1 else 'Выхода нет ('
